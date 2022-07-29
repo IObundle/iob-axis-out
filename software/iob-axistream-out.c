@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "iob-axistream-out.h"
 
 //Struct to store state of each peripheral instance
@@ -9,7 +10,7 @@ typedef struct {
 } instance_t;
 
 //Global vars
-instance_t *instances; //Array with state of each peripheral instance
+instance_t *instances = NULL; //Array with state of each peripheral instance
 unsigned int current_instance_idx; //Number of instances in 'instances' array
 
 
@@ -21,7 +22,7 @@ void axistream_out_init(int base_address){
 
   //Check if instance with this base_address has already been initialized
   for(int i = 0; i<num_of_stored_instances; i++){
-    if(buffer[num_of_stored_instances].address == base_address){
+    if(instances[num_of_stored_instances].address == base_address){
 		 current_instance_idx = i; //Save index of current instance for usage by other functions
 		 return;
 	 } 
@@ -39,6 +40,12 @@ void axistream_out_init(int base_address){
 void axistream_out_init_tdata_w(int base_address, int tdata_w){
   axistream_out_init(base_address);
   instances[current_instance_idx].tdata_w = tdata_w;
+}
+
+//Free memory from initialized instances
+void axistream_out_free(){
+	free(instances);
+	instances = NULL;
 }
 
 //Place value in FIFO, also place wstrb for word with TLAST signal.
@@ -70,7 +77,7 @@ void axistream_out_push(uint32_t value, uint8_t n_valid_bytes, bool is_tlast){
       if(is_tlast && i==n_valid_bytes-1)
         IOB_AXISTREAM_OUT_SET_WSTRB_NEXT_WORD_LAST(0xf); //send tlast with all valid bytes
 		//push buffer word into fifo
-      IOB_AXISTREAM_OUT_SET_IN(*((uint32_t *)instances[current_instance_idx].buffer));
+      IOB_AXISTREAM_OUT_SET_IN(*((uint32_t *)(void *)(instances[current_instance_idx].buffer)));
       instances[current_instance_idx].n_valid_bytes=0;
 	 }
   }
@@ -81,7 +88,7 @@ void axistream_out_push(uint32_t value, uint8_t n_valid_bytes, bool is_tlast){
     uint8_t wstrb = instances[current_instance_idx].tdata_w==1 ? (n_valid_bytes==1 ? 0x1 : n_valid_bytes==2 ? 0x3 : 0x7) : //tdata_w is 1 byte, so wstrb can be: 'b0001, 'b0011, 'b0111
                     0x3; //tdata_w is 2 bytes, so wstrb can only be: 'b0011
     IOB_AXISTREAM_OUT_SET_WSTRB_NEXT_WORD_LAST(wstrb);
-    IOB_AXISTREAM_OUT_SET_IN(*((uint32_t *)instances[current_instance_idx].buffer));
+    IOB_AXISTREAM_OUT_SET_IN(*((uint32_t *)(void *)(instances[current_instance_idx].buffer)));
     instances[current_instance_idx].n_valid_bytes=0;
   }
 }

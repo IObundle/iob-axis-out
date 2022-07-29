@@ -15,3 +15,5 @@ void axistream_out_push(uint32_t value, uint8_t n_valid_bytes, bool is_tlast);
 //Signal when FIFO is full
 bool axistream_out_full();
 
+//Free memory from initialized instances
+void axistream_out_free();
