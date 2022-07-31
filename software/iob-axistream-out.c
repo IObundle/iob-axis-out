@@ -63,17 +63,17 @@ void axistream_out_push_word(uint32_t value, char tlast_wstrb){
 
 //Place value in FIFO, also place wstrb for word with TLAST signal.
 //Arguments:
-//    value: value to insert in fifo
+//    byte_array: bytes to insert in fifo
 //    n_valid_bytes: number of valid bytes in value, should be multiple of tdata_w
 //    is_tlast: if value contains tlast
-void axistream_out_push(uint32_t value, uint8_t n_valid_bytes, bool is_tlast){
+void axistream_out_push(uint8_t *byte_array, uint8_t n_valid_bytes, bool is_tlast){
   for(int i = 0; i<n_valid_bytes; i++){
-    //Insert each byte of value into buffer
-    instances[current_instance_idx].buffer[instances[current_instance_idx].n_valid_bytes++]=(value>>(8*i)) & 0xff;
+    //Insert each byte of byte_array into buffer
+    instances[current_instance_idx].buffer[instances[current_instance_idx].n_valid_bytes++]=byte_array[i];
 	 
     //If buffer is full, push word into fifo
     if(instances[current_instance_idx].n_valid_bytes==4){
-      //If this word contains tlast, and already placed all bytes of value into buffer
+      //If this word contains tlast, and already placed all bytes of byte_array into buffer
       if(is_tlast && i==n_valid_bytes-1)
         IOB_AXISTREAM_OUT_SET_WSTRB_NEXT_WORD_LAST(0xf); //send tlast with all valid bytes
 		//push buffer word into fifo
