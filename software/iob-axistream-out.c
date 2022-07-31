@@ -21,7 +21,7 @@ void axistream_out_init(int base_address){
   IOB_AXISTREAM_OUT_INIT_BASEADDR(base_address);
 
   //Check if instance with this base_address has already been initialized
-  for(int i = 0; i<num_of_stored_instances; i++){
+  for(unsigned int i = 0; i<num_of_stored_instances; i++){
     if(instances[num_of_stored_instances].address == base_address){
 		 current_instance_idx = i; //Save index of current instance for usage by other functions
 		 return;
@@ -30,10 +30,10 @@ void axistream_out_init(int base_address){
 
   //Instance was not initialized, so initialize it
   instances = (instance_t *) realloc(instances, (++num_of_stored_instances)*sizeof(instance_t));
-  instances[num_of_stored_instances].address = base_address;
-  instances[num_of_stored_instances].n_valid_bytes = 0;
+  current_instance_idx = num_of_stored_instances-1; //Save index of current instance for usage by other functions
+  instances[current_instance_idx].address = base_address;
+  instances[current_instance_idx].n_valid_bytes = 0;
   instances[current_instance_idx].tdata_w = 1; //Default tdata width to 1 byte
-  current_instance_idx = num_of_stored_instances; //Save index of current instance for usage by other functions
 }
 
 //Set AXISTREAMOUT base address and tdata width
@@ -67,7 +67,7 @@ void axistream_out_push_word(uint32_t value, char tlast_wstrb){
 //    n_valid_bytes: number of valid bytes in value, should be multiple of tdata_w
 //    is_tlast: if value contains tlast
 void axistream_out_push(uint8_t *byte_array, uint8_t n_valid_bytes, bool is_tlast){
-  for(int i = 0; i<n_valid_bytes; i++){
+  for(unsigned int i = 0; i<n_valid_bytes; i++){
     //Insert each byte of byte_array into buffer
     instances[current_instance_idx].buffer[instances[current_instance_idx].n_valid_bytes++]=byte_array[i];
 	 
